@@ -233,162 +233,167 @@ function equation7(phi,x_bar,r)     # equations to find theta1 and L  for RS at 
 end
 
 
-function min_RS(orig_coord,orig_head,dest_coord,dest_head,r)
+function min_RS(orig_coord,orig_head,dest_coord,dest_head,r)    #   find the minimum path cost with max 2 segment path with RS structure
    
-    # ds
+    # ds- only straight line segment
         
-        theta1 = atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])
+        theta1 = atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])     # heading angle of starting point
 
-        theta1=zeroto2pi(theta1)
+        theta1=zeroto2pi(theta1)    # converting the angle to zero to 2*pi
 
-        theta2 = theta1
+        theta2 = theta1     # for straight line segement start and ending heading is same
         
-        if check_interval(theta1,theta2,orig_head,dest_head) 
+        if check_interval(theta1,theta2,orig_head,dest_head) # check if the heading angles lies withing the desired interval
         
-        ds=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)
+            ds=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)    # cost of straight line segement
     
         else
-            ds=1/0
+            ds=1/0  # straight line segment doesn't exists within in given intervals the cost is set to infinity
         end
     
-    ds=[ds,theta1,theta2]    
+    ds=[ds,theta1,theta2]    # vector with cost and heading angles.
    
     
     
-    #dr
-        x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)
-        dr=[1/0,theta1,theta2]
-        if x_bar<=2*r
-        
-        phi=asin(x_bar/(2*r))
-        psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])
-        
-        theta1=psi+phi
-        theta2=psi-phi
-        
-        theta1=zeroto2pi(theta1)
-        theta2=zeroto2pi(theta2)
-        if check_interval(theta1,theta2,orig_head,dest_head) && dr[1]>=r*(zeroto2pi(theta1-theta2))
-        
-        dr=r*(zeroto2pi(theta1-theta2))
-            
-        dr=[dr,theta1,theta2]
+    #dr only curved segment
 
-        end
+        x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2) # distance between two targets
+
+        dr=[1/0,0.0,0.0]  # cost is set to infinity
+
+        if x_bar<=2*r   # curve segment can only exists for the case when distance between two targets is less than 2*r
         
+            # now we would like to rotate the coordinates such that starting target is at (0,0) and ending target is at (x_bar,0)
+
+            psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1]) # psi is the angle of rotation
+            phi=asin(x_bar/(2*r)) # heading in rotated frame
+
+            theta1=psi+phi  # rotating back to global frame
+            theta2=psi-phi  # rotating back to global frame
+            
+            theta1=zeroto2pi(theta1)    # converting to 0 to 2*pi
+            theta2=zeroto2pi(theta2)    # converting to 0 to 2*pi
+            
+            if check_interval(theta1,theta2,orig_head,dest_head) && dr[1]>=r*(zeroto2pi(theta1-theta2)) # checking the headings
+            
+                dr=r*(zeroto2pi(theta1-theta2)) # cost of path
+                
+                dr=[dr,theta1,theta2]
+
+            end
+            
 
         end
     
  
+        # second solution for single circular segment
+        if x_bar<=2*r
+            
+            phi=pi-asin(x_bar/(2*r))    # another possible solution for the circular arc
+            psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1]) # psi is the angle of rotation
+            
+            theta1=psi+phi   # rotating back to global frame
+            theta2=psi-phi   # rotating back to global frame
+            
+            theta1=zeroto2pi(theta1)    # converting to 0 to 2*pi
+            theta2=zeroto2pi(theta2)    # converting to 0 to 2*pi
 
-    if x_bar<=2*r
-        
-        phi=pi-asin(x_bar/(2*r))
-        psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])
-        
-        theta1=psi+phi
-        theta2=psi-phi
-        
-        theta1=zeroto2pi(theta1)
-        theta2=zeroto2pi(theta2)
+            if check_interval(theta1,theta2,orig_head,dest_head) && dr[1]>=r*(zeroto2pi(theta1-theta2))
+            
+                dr=r*(zeroto2pi(theta1-theta2)) # cost of path
+                dr=[dr,theta1,theta2]    
 
-        if check_interval(theta1,theta2,orig_head,dest_head) && dr[1]>=r*(zeroto2pi(theta1-theta2))
-        
-            dr=r*(zeroto2pi(theta1-theta2))
-            dr=[dr,theta1,theta2]    
+            
+            end
 
-        
         end
+        
 
-    end
+
+    #RS1(theta1_min)  - 2 segment path starting with right hand arc from target 1 and then straight line segment to target 2 with heading of target 1 assumed to be theta1_min
+        
     
+        # now we would like to rotate the coordinates such that starting target is at (0,0) and ending target is at (x_bar,0)
 
-
-    #RS1(theta1_min)
-        
-         x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)
-         psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])
+        x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)    # distance between two targets
+        psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])      # find the angle of rotation to rotate the frame 
         
         
-        theta1=orig_head[1]
+        theta1=orig_head[1] # heading of first target
         
-        theta1_hat=theta1-psi
+        theta1_hat=theta1-psi   # heading of first target in rotated frame
 
-        theta1_hat=zeroto2pi(theta1_hat)
+        theta1_hat=zeroto2pi(theta1_hat)    # converted to 0 to 2pi
 
-        solution=equation6(theta1_hat,x_bar,r)
+        solution=equation6(theta1_hat,x_bar,r)  # find the possible solutions based on the equation from the paper
      
 
-        RS1_theta1min_value=1/0
-        RS1_theta1min=[1/0,0,0]
+        RS1_theta1min_value=1/0 # default cost is set to infinity
+        RS1_theta1min=[1/0,0,0] # default cost is set to infinity and heading are set to 0
 
         for i in solution
 
-            check=1
-            
-            if check==1
+     
+            phi=i[1]    
+            L=i[2]  # lenght of the straight line segment
 
-            phi=i[1]
-            L=i[2]
-            if L>=0 
+            if L>=0 # to make sure straight line segment is positive
 
-                theta2_hat=2*pi-phi
+                theta2_hat=2*pi-phi # heading of ending target in rotated frame
         
-                theta2_hat=zeroto2pi(theta2_hat)
+                theta2_hat=zeroto2pi(theta2_hat)    # heading converted to 0 to 2pi
 
-                theta2=theta2_hat+psi
+                theta2=theta2_hat+psi   # theta2 in rotated frame
         
-                theta2=zeroto2pi(theta2)
-        
-                if check_interval(theta1,theta2,orig_head,dest_head) && RS1_theta1min_value>=r*zeroto2pi(theta1_hat+phi)+L
-        
-                    RS1_theta1min_value=r*zeroto2pi(theta1_hat+phi)+L
-                    RS1_theta1min=[RS1_theta1min_value,theta1,theta2]
+                theta2=zeroto2pi(theta2)    # converting to 0 to 2pi
+
+                 # Checking headings and make sure to store the minimum cost path among all possible solutions
+                if check_interval(theta1,theta2,orig_head,dest_head) && RS1_theta1min_value>=r*zeroto2pi(theta1_hat+phi)+L 
+                    RS1_theta1min_value=r*zeroto2pi(theta1_hat+phi)+L       # cost of the path
+                    RS1_theta1min=[RS1_theta1min_value,theta1,theta2]       # cost and heading angles
             
                 end
 
             end
-        end
+  
         end
     
 
-    # RS2(theta2_min)
+    # RS2(theta2_min) - 2 segment path starting with right hand arc from target 1 and then straight line segment to target 2 with heading of target 2 assumed to be theta2_min
         
-        x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)
-        psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])
-        
-        theta2=dest_head[1]
-        
-        theta2_hat=theta2-psi
-        theta2_hat=zeroto2pi(theta2_hat)
 
-        phi=2*pi-theta2_hat
+        x_bar=sqrt((dest_coord[1]-orig_coord[1])^2+(dest_coord[2]-orig_coord[2])^2)    # distance between two targets
+        psi=atan(dest_coord[2] - orig_coord[2], dest_coord[1] - orig_coord[1])      # find the angle of rotation to rotate the frame 
+      
+        theta2=dest_head[1] # heading of second target in global frame
+        
+        theta2_hat=theta2-psi   # heading of second target in rotated frame
+        theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
+
+        phi=2*pi-theta2_hat # finding phi based on  heading of 2nd target in rotated frame
     
-        phi=zeroto2pi(phi)
+        phi=zeroto2pi(phi)  # converting 0 to 2pi
        
-        RS1_theta2min_value=1/0
-        RS1_theta2min=[1/0,0,0]
+        RS1_theta2min_value=1/0 # setting default to  cost  to infinity
+        RS1_theta2min=[1/0,0,0] # setting default to  cost to infinity and heading as zeroes
 
-        if phi<=pi 
+        if phi<=pi # phi should be less than equal to pi for solution to exists
         
-            solution=equation7(phi,x_bar,r)
-
+            solution=equation7(phi,x_bar,r)  # find the possible solutions based on the equation from the paper
 
     
             for i in solution
 
-                check=1
-                if check==1
 
-                theta1_hat=i[1]
-                L=i[2]
+                theta1_hat=i[1] # possible heading of target 1 in rotated frame
+                L=i[2]      # length of straight line segment
                 
-                if L>=0 
+                if L>=0 # length of straight line segment shoulde be greater than equal to zero
         
-                    theta1=theta1_hat+psi
+                    theta1=theta1_hat+psi       # heading of target 1 in global frame
         
-                    theta1_hat=zeroto2pi(theta1_hat)
-                    theta1=zeroto2pi(theta1)
+                    theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
+                    theta1=zeroto2pi(theta1)    # converting 0 to 2pi
         
                     if check_interval(theta1,theta2,orig_head,dest_head) && RS1_theta2min_value>=r*zeroto2pi(theta1_hat+phi)+L
         
@@ -398,7 +403,7 @@ function min_RS(orig_coord,orig_head,dest_coord,dest_head,r)
                     end
  
                 end
-                end
+          
             end
         end
 
@@ -411,11 +416,11 @@ function min_RS(orig_coord,orig_head,dest_coord,dest_head,r)
         theta2=dest_head[2]
 
         theta2_hat=theta2-psi
-        theta2_hat=zeroto2pi(theta2_hat)
+        theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
 
         phi=2*pi-theta2_hat
 
-        phi=zeroto2pi(phi)
+        phi=zeroto2pi(phi)    # converting 0 to 2pi
 
         RS1_theta2max_value=1/0
         RS1_theta2max=[1/0,0,0]
@@ -434,8 +439,8 @@ function min_RS(orig_coord,orig_head,dest_coord,dest_head,r)
 
                     theta1=theta1_hat+psi
 
-                    theta1_hat=zeroto2pi(theta1_hat)
-                    theta1=zeroto2pi(theta1)
+                    theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
+                    theta1=zeroto2pi(theta1)    # converting 0 to 2pi
 
                     if check_interval(theta1,theta2,orig_head,dest_head) && RS1_theta2max_value>=r*zeroto2pi(theta1_hat+phi)+L
 
@@ -477,7 +482,7 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
        
         theta1_hat=theta1-psi
     
-        theta1_hat=zeroto2pi(theta1_hat)
+        theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
     
         solution = equation1(theta1_hat,x_bar,r)
     
@@ -494,11 +499,11 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
             phi = i[1]
             
          
-            theta2_hat=zeroto2pi(theta2_hat)
-            phi=zeroto2pi(phi)
+            theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
+            phi=zeroto2pi(phi)    # converting 0 to 2pi
             theta2=theta2_hat+psi
     
-            theta2=zeroto2pi(theta2)
+            theta2=zeroto2pi(theta2)    # converting 0 to 2pi
     
             if check_interval(theta1,theta2,orig_head,dest_head) && RL1_theta1_min_value>=r*(zeroto2pi(theta1_hat+phi)+zeroto2pi(phi+theta2_hat))
         
@@ -520,7 +525,7 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
        
         theta1_hat=theta1-psi
     
-        theta1_hat=zeroto2pi(theta1_hat)
+        theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
     
         solution = equation1(theta1_hat,x_bar,r)
 
@@ -538,12 +543,12 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
             theta2_hat = i[2]
             phi = i[1]
         
-            theta2_hat=zeroto2pi(theta2_hat)
+            theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
     
-            phi=zeroto2pi(phi)
+            phi=zeroto2pi(phi)    # converting 0 to 2pi
             theta2=theta2_hat+psi
     
-            theta2=zeroto2pi(theta2)
+            theta2=zeroto2pi(theta2)    # converting 0 to 2pi
     
             if check_interval(theta1,theta2,orig_head,dest_head)  && RL1_theta1_max_value>=r*(zeroto2pi(theta1_hat+phi)+zeroto2pi(phi+theta2_hat))
         
@@ -567,7 +572,7 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
      theta2=dest_head[1]
     
      theta2_hat=theta2-psi
-     theta2_hat=zeroto2pi(theta2_hat)
+     theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
     
      solution = equation2(theta2_hat,x_bar,r)
 
@@ -585,11 +590,11 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
         theta1_hat = i[2]
         phi = i[1]
      
-        theta1_hat=zeroto2pi(theta1_hat)
-        phi=zeroto2pi(phi)
+        theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
+        phi=zeroto2pi(phi)    # converting 0 to 2pi
         theta1=theta1_hat+psi
     
-        theta1=zeroto2pi(theta1)
+        theta1=zeroto2pi(theta1)    # converting 0 to 2pi
     
         if check_interval(theta1,theta2,orig_head,dest_head)  && RL2_theta2_min_value>=r*(zeroto2pi(theta1_hat+phi)+zeroto2pi(phi+theta2_hat))
      
@@ -611,7 +616,7 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
     
      theta2_hat=theta2-psi
      
-     theta2_hat=zeroto2pi(theta2_hat)
+     theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
     
      solution = equation2(theta2_hat,x_bar,r)
     
@@ -628,11 +633,11 @@ function min_RL(orig_coord,orig_head,dest_coord,dest_head,r)
         theta1_hat = i[2]
         phi = i[1]
      
-        theta1_hat=zeroto2pi(theta1_hat)
-        phi=zeroto2pi(phi)
+        theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
+        phi=zeroto2pi(phi)    # converting 0 to 2pi
         theta1=theta1_hat+psi
     
-        theta1=zeroto2pi(theta1)
+        theta1=zeroto2pi(theta1)    # converting 0 to 2pi
     
         if check_interval(theta1,theta2,orig_head,dest_head)  && RL2_theta2_max_value>=r*(zeroto2pi(theta1_hat+phi)+zeroto2pi(phi+theta2_hat))
      
@@ -677,13 +682,13 @@ function min_RL_theta(orig_coord,orig_head,dest_coord,dest_head,r)
                 theta2_hat=i[3]
                 phi=i[1]
     
-                theta2_hat=zeroto2pi(theta2_hat)
-                phi=zeroto2pi(phi)
+                theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
+                phi=zeroto2pi(phi)    # converting 0 to 2pi
                 theta1_hat=theta2_hat
     
                 theta1=theta1_hat+psi
     
-                theta1=zeroto2pi(theta1)
+                theta1=zeroto2pi(theta1)    # converting 0 to 2pi
                 theta2=theta1
     
                 RL_theta1_value=1/0
@@ -717,15 +722,15 @@ function min_RL_theta(orig_coord,orig_head,dest_coord,dest_head,r)
             phi = i[1]
             theta1_hat = i[2]
     
-            theta2_hat=zeroto2pi(theta2_hat)
-            phi=zeroto2pi(phi)
-            theta1_hat=zeroto2pi(theta1_hat)
+            theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
+            phi=zeroto2pi(phi)    # converting 0 to 2pi
+            theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
         
             theta1=theta1_hat+psi
-            theta1=zeroto2pi(theta1)
+            theta1=zeroto2pi(theta1)    # converting 0 to 2pi
         
             theta2=theta2_hat+psi
-            theta2=zeroto2pi(theta2)
+            theta2=zeroto2pi(theta2)    # converting 0 to 2pi
     
             RL_theta1_phi_value=1/0
             RL_theta1_phi=[1/0,0,0]
@@ -753,15 +758,15 @@ function min_RL_theta(orig_coord,orig_head,dest_coord,dest_head,r)
             phi = i[1]
             theta1_hat = i[2]
     
-            theta2_hat=zeroto2pi(theta2_hat)
-            phi=zeroto2pi(phi)
-            theta1_hat=zeroto2pi(theta1_hat)
+            theta2_hat=zeroto2pi(theta2_hat)    # converting 0 to 2pi
+            phi=zeroto2pi(phi)    # converting 0 to 2pi
+            theta1_hat=zeroto2pi(theta1_hat)    # converting 0 to 2pi
     
             theta1=theta1_hat+psi
-            theta1=zeroto2pi(theta1)
+            theta1=zeroto2pi(theta1)    # converting 0 to 2pi
     
             theta2=theta2_hat+psi
-            theta2=zeroto2pi(theta2)
+            theta2=zeroto2pi(theta2)    # converting 0 to 2pi
     
             RL_theta2_phi_value=1/0
             RL_theta2_phi=[1/0,0,0]
@@ -783,45 +788,45 @@ function min_RL_theta(orig_coord,orig_head,dest_coord,dest_head,r)
 end
 
 
-#Case1- When path is of the form RSR,RSL,LSR, LSL, RLR and LRL.
+
 
 function Dubins_interval(orig_coord,orig_head,dest_coord,dest_head,r)
  
 
     # 3 segment path 
+    #Case1- When path is of the form RSR,RSL,LSR, LSL, RLR and LRL. 
     min_val = 1/0.0
     path_type = []
 
-    for i in orig_head
+    for i in orig_head # iterate over extreme heading of first target
 
-        for j in dest_head
+        for j in dest_head # iterate over extreme heading of second target
     
-            temp1=copy(orig_coord)
-            push!(temp1,i)
-            temp2=copy(dest_coord)
-            push!(temp2,j)
+            temp1=copy(orig_coord)  # make a copy first target
+            push!(temp1,i) # push the heading of first target
+            temp2=copy(dest_coord)  # make a copy second target
+            push!(temp2,j)  # push the heading of second target
             
-            errcode, path = dubins_shortest_path(temp1,temp2, r)
+            errcode, path = dubins_shortest_path(temp1,temp2, r)    # find the shortest path at the extreme headings
             
             #println(dubins_path_type(path))
-            val1 = dubins_segment_length(path, 1)
-            val2 = dubins_segment_length(path, 2)
-            val3 = dubins_segment_length(path, 3)
+            val1 = dubins_segment_length(path, 1)   # cost of first segment
+            val2 = dubins_segment_length(path, 2)   # cost of second segment
+            val3 = dubins_segment_length(path, 3)   # cost of third segment
             
                     
-            if val1!=0.0 && val2!=0.0 && val3!=0
+            if val1!=0.0 && val2!=0.0 && val3!=0 #  make sure to store 3 segment path only
 
-                val=dubins_path_length(path)
+                val=dubins_path_length(path)    
 
             else
                 val=1/0.0
             end
             
-            if val<min_val
+            if val<min_val # we will store the minimum cost three segment path among all possible extreme headings
 
-                min_val = val
-                path_type = dubins_path_type(path)
-                global path1 = [val,i,j]
+                global path1 = [val,i,j]    # storing cost and headings
+
             end
             
         end
@@ -839,7 +844,7 @@ function Dubins_interval(orig_coord,orig_head,dest_coord,dest_head,r)
             x2=min_RL(orig_coord,orig_head,dest_coord,dest_head,r)      # shortest path either theta1 or theta2 is at exterme value
             
 
-        #LR
+        #LR LR path has two ways to approach, either via reflection about x-axis or y-axis
 
         #LR1       reflection about x-axis
         
@@ -849,40 +854,42 @@ function Dubins_interval(orig_coord,orig_head,dest_coord,dest_head,r)
             temp1[2]=-temp1[2]          #reflection about x-axis
             temp2[2]=-temp2[2]          #reflection about x-axis
             
-            temp1_head=copy(orig_head)
-            temp2_head=copy(dest_head)
+            temp1_head=copy(orig_head)  # copy the heading interval
+            temp2_head=copy(dest_head)  # copy the heading interval
             
             temp1_head[1]=zeroto2pi(-orig_head[2])  # new heading interval for reflected points
-            temp1_head[2]=zeroto2pi(-orig_head[1])
+            temp1_head[2]=zeroto2pi(-orig_head[1])  # new heading interval for reflected points
             
             
-            temp2_head[1]=zeroto2pi(-dest_head[2])
-            temp2_head[2]=zeroto2pi(-dest_head[1])
+            temp2_head[1]=zeroto2pi(-dest_head[2]) # new heading interval for reflected points
+            temp2_head[2]=zeroto2pi(-dest_head[1])# new heading interval for reflected points
             
-            x1_lr1=min_RL_theta(temp1,temp1_head,temp2,temp2_head,r)
-            x2_lr1=min_RL(temp1,temp1_head,temp2,temp2_head,r)
+            x1_lr1=min_RL_theta(temp1,temp1_head,temp2,temp2_head,r) # shortest path among, theta1=theta2, theta1+phi=pi or theta2+phi=pi
+            x2_lr1=min_RL(temp1,temp1_head,temp2,temp2_head,r)   # shortest path either theta1 or theta2 is at exterme value
             
+            # now we will reflect the heading again to get back in global frame
             temp=x1_lr1[2]
-            x1_lr1[2]=zeroto2pi(-x1_lr1[2])
+            x1_lr1[2]=zeroto2pi(-x1_lr1[2]) 
             x1_lr1[3]=zeroto2pi(-x1_lr1[3])
             
             temp=x2_lr1[2]
             x2_lr1[2]=zeroto2pi(-x2_lr1[2])
             x2_lr1[3]=zeroto2pi(-x2_lr1[3])
             
+
         #LR2    reflection about y-axis  - reflection about x-axis or y-axis have same solution.
         
-            temp1=copy(orig_coord)
-            temp2=copy(dest_coord)
+            temp1=copy(orig_coord) #copy of starting point
+            temp2=copy(dest_coord) #copy of ending point
             
-            temp1[1]=-temp1[1]
-            temp2[1]=-temp2[1]
+            temp1[1]=-temp1[1]   #reflection about y-axis
+            temp2[1]=-temp2[1]   #reflection about y-axis 
             
-            temp1_head=copy(orig_head)
-            temp2_head=copy(dest_head)
+            temp1_head=copy(orig_head) # copy thi heading
+            temp2_head=copy(dest_head) # copy thi heading
             
-            temp1_head[1]=zeroto2pi(-orig_head[2])
-            temp1_head[2]=zeroto2pi(-orig_head[1])
+            temp1_head[1]=zeroto2pi(-orig_head[2]) # reflection about y-axis
+            temp1_head[2]=zeroto2pi(-orig_head[1]) # reflection about y-axis
             
             
             temp2_head[1]=zeroto2pi(-dest_head[2])
@@ -1001,7 +1008,7 @@ function Dubins_interval(orig_coord,orig_head,dest_coord,dest_head,r)
     minimum = argmin(v -> v[1], x)      # minimum among all possible paths
 
     
-    return minimum
+    return x
     
 end
 

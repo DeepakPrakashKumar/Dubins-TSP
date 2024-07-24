@@ -4,25 +4,25 @@ using Plots
 
 include("running_LKH.jl")
 include("Dubins_interval.jl")
-include("data.jl")
+#include("data.jl")
 
 
 
 
 function min_cost(orig_coord,orig_head,dest_coord,dest_head)    # cost to go from one point to the another point
 
-    orig_val = orig_head
-    new_coord_orig = copy(orig_coord)
-    push!(new_coord_orig, orig_val)
+    orig_val = orig_head # starting heading
+    new_coord_orig = copy(orig_coord) # starting coordinate
+    push!(new_coord_orig, orig_val) # starting coordinate plus heading
     
-    dest_val = dest_head
-    new_coord_dest = copy(dest_coord)
-    push!(new_coord_dest, dest_val)
+    dest_val = dest_head    # destination heading
+    new_coord_dest = copy(dest_coord)   # destination coordinate
+    push!(new_coord_dest, dest_val) # destination coordinate plus heading
 
     errcode, path = dubins_shortest_path(new_coord_orig, new_coord_dest, 1.)
-    val = dubins_path_length(path)
+    val = dubins_path_length(path)  # cost of the path travelled
 
-    result = [val,orig_val,dest_val]
+    result = [val,orig_val,dest_val]    # cost, starting heading and final heading
         
     return result
 
@@ -128,9 +128,9 @@ function solve_dubins_tsp(coordinates,N, type,r)        #function to give upper 
 
         # extract angles and cost 
 
-    angle1 = []
-    angle2 = []
-    cost = []
+    angle1 = []     # exit angle from target 1
+    angle2 = []     # entrying angle at the target 2
+    cost = []       # cost of traveling from target1 to target 2
     for i in 1:size(coord1)[1]-1
         C1 = coord1[i]
         C2 = coord1[i+1]
@@ -139,11 +139,11 @@ function solve_dubins_tsp(coordinates,N, type,r)        #function to give upper 
 
         if type == 1
                 
-            result = min_cost(coordinates[C1],(V1-1)*2*pi/N,coordinates[C2],(V2-1)*2*pi/N)
+            result = min_cost(coordinates[C1],(V1-1)*2*pi/N,coordinates[C2],(V2-1)*2*pi/N)      #  feasible solution for upper bound
         
         elseif type==2
 
-            result = Dubins_interval(coordinates[C1],[(V1-1)*2*pi/N V1*2*pi/N],coordinates[C2],[(V2-1)*2*pi/N V2*2*pi/N],1.0)
+            result = Dubins_interval(coordinates[C1],[(V1-1)*2*pi/N V1*2*pi/N],coordinates[C2],[(V2-1)*2*pi/N V2*2*pi/N],1.0)   # lower bound cost
         
         end
         
@@ -152,18 +152,18 @@ function solve_dubins_tsp(coordinates,N, type,r)        #function to give upper 
         push!(angle2,result[3])
         
     end
-        C1 = coord1[size(coord1)[1]]
-        C2 = coord1[1]
-        V1 = vertex1[size(coord1)[1]]
-        V2 = vertex1[1]
+        C1 = coord1[size(coord1)[1]]    # coordinate of last target
+        C2 = coord1[1]      #   coordinate of first target
+        V1 = vertex1[size(coord1)[1]]   # vertex of last target
+        V2 = vertex1[1] # vertex of first target
 
         if type == 1
                 
-            result = min_cost(coordinates[C1],(V1-1)*2*pi/N,coordinates[C2],(V2-1)*2*pi/N)
+            result = min_cost(coordinates[C1],(V1-1)*2*pi/N,coordinates[C2],(V2-1)*2*pi/N) #  feasible solution for upper bound
         
         elseif type==2
 
-            result = Dubins_interval(coordinates[C1],[(V1-1)*2*pi/N V1*2*pi/N],coordinates[C2],[(V2-1)*2*pi/N V2*2*pi/N],1.0)
+            result = Dubins_interval(coordinates[C1],[(V1-1)*2*pi/N V1*2*pi/N],coordinates[C2],[(V2-1)*2*pi/N V2*2*pi/N],1.0) # lower bound cost
         
         end
 
@@ -172,7 +172,7 @@ function solve_dubins_tsp(coordinates,N, type,r)        #function to give upper 
         push!(angle2,result[3])
         
 
-    return coord1, angle1, angle2, sum(cost)
+    return coord1, angle1, angle2, sum(cost)    # return the sequence of targets to visit, angle of exit and entry and total cost of the path
 
 end
 
@@ -188,6 +188,8 @@ function plot_dubins_tsp(coordinates,N,type,r)
     value=[]    # cost of travelling will be stored here
     for i in 1:size(angle1)[1]-1
     
+        # now we find the dubins path going from ith target to (i+1)th target
+
         errcode, path = dubins_shortest_path([coordinates[coord[i]][1],coordinates[coord[i]][2],angle1[i]], [coordinates[coord[i+1]][1],coordinates[coord[i+1]][2],angle2[i]], 1.)
         val = dubins_path_length(path)
         push!(value,val)
@@ -209,7 +211,7 @@ function plot_dubins_tsp(coordinates,N,type,r)
     
     d=size(angle1)[1]      # last target
     
-        errcode, path = dubins_shortest_path([coordinates[coord[d]][1],coordinates[coord[d]][2],angle1[d]], [coordinates[coord[1]][1],coordinate[coord[1]][2],angle2[d]], 1.)
+        errcode, path = dubins_shortest_path([coordinates[coord[d]][1],coordinates[coord[d]][2],angle1[d]], [coordinates[coord[1]][1],coordinates[coord[1]][2],angle2[d]], 1.)
         val = dubins_path_length(path)
         push!(value,val)
         
@@ -226,8 +228,8 @@ function plot_dubins_tsp(coordinates,N,type,r)
             
         end
     
-            push!(x_end,coordinate[coord[d]][1])
-            push!(y_end,coordinate[coord[d]][2])
+            push!(x_end,coordinates[coord[d]][1])
+            push!(y_end,coordinates[coord[d]][2])
     
     
         
