@@ -7,7 +7,7 @@ This package provides functionality to find the lower and upper bound for the Tr
 To use this package, include it in your Julia environment:
 
 ```julia
-include("Dubins_TSP")
+include("Dubins_TSP.jl")
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ include("Dubins_TSP")
 The primary functions provided by this package are **'solve_dubins_tsp'** and **'plot_dubins_tsp'**
 
 ```julia
-include("Dubins_TSP")
+include("Dubins_TSP.jl")
 
 n=10  # number of coordinates
 coordinates = [rand(2)*10 for _ in 1:n]
