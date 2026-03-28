@@ -1008,7 +1008,7 @@ function Dubins_interval(orig_coord,orig_head,dest_coord,dest_head,r)
     minimum = argmin(v -> v[1], x)      # minimum among all possible paths
 
     
-    return x
+    return minimum
     
 end
 
